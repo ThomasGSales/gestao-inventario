@@ -1,0 +1,74 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body{
+    overflow: hidden;
+}
+
+.supplier-region{
+    display: flex;
+    gap: 30px;
+}
+.supplier-region input{
+    transition: 0.2s;
+    padding: 15px;
+    color: #fff;
+    border-radius: 20px ;
+    cursor: pointer;
+}
+
+.supplier-region input:hover{
+    box-shadow: 3.5px 3.5px 0px 1px gold;
+    transform: scale(1.09, 1.09);
+}
+
+.supplier-region input:focus{
+    border: 0 none;
+    outline: 0;
+    transform: scale(1.09, 1.09);
+}
+
+.supplier-father button{
+    transition: 0.2s;
+    padding: 15px;
+    color: #fff;
+    border-radius: 20px ;
+}
+
+.supplier-father button:hover {
+    transform: scale(1.09, 1.09);
+    box-shadow: 3.5px 3.5px 0px 1px gold;
+}
+
+.supplier-father{
+    width: 100%;
+}
+
+.supplier-father ul {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    border: 1px solid black;
+    padding: 15px;
+    border-radius: 20px; 
+    height: 300px;
+    max-height: 300px;  
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.supplier-father ul li{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin: 15px 0px;
+}
+
+.supplier-father ul li button {
+    background-color: rgb(255, 76, 76);
+}
+
