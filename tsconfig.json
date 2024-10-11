@@ -12,6 +12,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "jsx": "react",
+    "strict": true
   }
 }
