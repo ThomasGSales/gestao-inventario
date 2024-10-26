@@ -16,6 +16,7 @@ const Pedidos = () => {
           <Link to="/addpedido">
             <Button>Adicionar Pedido</Button>
           </Link>
+          
         </div>
       )}
 

@@ -9,4 +9,5 @@ const TransacoesFinanceiras: React.FC = () => {
   );
 };
 
+
 export default TransacoesFinanceiras;
