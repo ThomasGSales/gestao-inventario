@@ -12,6 +12,7 @@ const Registro = () => {
   const [role, setRole] = useState('user');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();

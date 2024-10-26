@@ -13,6 +13,7 @@ const Login = () => {
   const { login } = useAuth(); // Usando o contexto de autenticação
   const navigate = useNavigate(); // Para redirecionamento
 
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
