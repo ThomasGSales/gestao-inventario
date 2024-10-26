@@ -1,42 +1,137 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* App.css ou seu arquivo CSS */
+nav {
+  background-color: #000000;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 10px 0;
+  z-index: 1000;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px; /* Limita a largura máxima */
+  margin: 0 auto; /* Centraliza o conteúdo */
+  padding: 0 20px; /* Espaçamento horizontal */
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.logo a {
+  color: white;
+  text-decoration: none;
+  font-size: 24px;
+}
+
+.nav-links ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.nav-links ul li {
+  margin: 0 15px;
+}
+
+.nav-links ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.nav-links ul li a:hover {
+  text-decoration: underline;
+}
+
+/* Estilos para o ícone do menu */
+.menu-icon {
+  display: none;
+  cursor: pointer;
+}
+
+.menu-icon div {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  margin: 5px;
+  transition: 0.4s;
+}
+
+/* Efeitos de animação do ícone quando o menu está aberto */
+.menu-icon.open .bar1 {
+  transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.menu-icon.open .bar2 {
+  opacity: 0;
+}
+
+.menu-icon.open .bar3 {
+  transform: rotate(45deg) translate(-5px, -6px);
+}
+
+/* Responsividade */
+@media screen and (max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    top: 60px;
+    left: -100%;
+    width: 100%;
+    background-color: #000000;
+    transition: 0.5s;
   }
-  to {
-    transform: rotate(360deg);
+
+  .nav-links.open {
+    left: 0;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+  .nav-links ul {
+    flex-direction: column;
+    text-align: center;
   }
+
+  .nav-links ul li {
+    margin: 15px 0;
+  }
+
+  .menu-icon {
+    display: block;
+  }
+    /* Ajusta o estilo do link de login/logout no menu sanduíche */
+    .auth-link {
+      margin-top: 15px;
+    }
+  
+    .auth-link button {
+      background-color: #ffffff;
+      color: #000000;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+    }
+  
+    .auth-link button:hover {
+      background-color: #f1f1f1;
+    }
 }
 
-.card {
-  padding: 2em;
+nav::after {
+  content: '';
+  display: block;
+  margin-top: 10px;
+  border-bottom: 2px solid #ccc;
 }
 
-.read-the-docs {
-  color: #888;
+.App {
+  margin-top: 60px;
+}
+
+h1 {
+  font-size: 36px;
+}
+
+p {
+  font-size: 16px;
+  color: #666;
 }
