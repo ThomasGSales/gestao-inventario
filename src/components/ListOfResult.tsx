@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import api from "@/utils/api";  // Use a instância Axios configurada
-import { useAuth } from '@/context/AuthContext'; // Importando o contexto de autenticação
+import { useAuth } from '@/context/AuthContext';
 
 interface Produto {
   id: number;
@@ -41,11 +41,10 @@ function ListOfResult() {
   const [filtroFornecedor, setFiltroFornecedor] = useState<string>("");
   const [ordemPreco, setOrdemPreco] = useState<string>("");
 
-  const { user } = useAuth(); // Obtendo o papel do usuário
+  const { user } = useAuth();
 
-  // Fetch produtos com filtro
   const fetchProdutos = () => {
-    let query = `/produtos?`;  // Base URL configurada no api.ts
+    let query = `/produtos?`;
 
     if (filtroNome) {
       query += `nome=${encodeURIComponent(filtroNome)}&`;
@@ -57,9 +56,10 @@ function ListOfResult() {
       query += `ordemPreco=${encodeURIComponent(ordemPreco)}&`;
     }
 
-    api.get(query)  // Usando api (Axios) para fazer a requisição
+    api.get(query)
       .then((res) => setResult(res.data))
-      .catch((err) => setError(`Erro ao carregar produtos: ${err.message}`));
+      .catch((err) => setError(`Erro ao carregar produtos: ${err.message}`))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -67,8 +67,7 @@ function ListOfResult() {
   }, [filtroNome, filtroFornecedor, ordemPreco]);
 
   useEffect(() => {
-    // Fetch fornecedores
-    api.get("/fornecedores")  // Usando api (Axios) para buscar fornecedores
+    api.get("/fornecedores")
       .then((res) => {
         const fornecedorMap = res.data.reduce((map: { [x: string]: any; }, fornecedor: { FornecedorID: string | number; Nome: any; }) => {
           map[fornecedor.FornecedorID] = fornecedor.Nome;
@@ -82,7 +81,7 @@ function ListOfResult() {
 
   const handleDelete = (id: number) => {
     if (confirm("Tem certeza que deseja excluir este produto?")) {
-      api.delete(`/produtos/${id}`)  // Usando api (Axios) para deletar produto
+      api.delete(`/produtos/${id}`)
         .then(() => {
           setResult(result.filter((item) => item.id !== id));
         })
@@ -94,38 +93,47 @@ function ListOfResult() {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="p-4 overflow-x-auto">
-      <div className="flex space-x-4 mb-4">
+    <div className="p-4">
+      {/* Filtros responsivos */}
+      <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-2 lg:space-y-0 mb-4">
         <Input
           placeholder="Filtrar por nome"
           value={filtroNome}
           onChange={(e) => setFiltroNome(e.target.value)}
+          className="lg:w-1/3 w-full"
         />
-        <Select onValueChange={setFiltroFornecedor} value={filtroFornecedor}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filtrar por fornecedor" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(fornecedores).map(([id, nome]) => (
-              <SelectItem key={id} value={id}>
-                {nome}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select onValueChange={setOrdemPreco} value={ordemPreco}>
-          <SelectTrigger>
-            <SelectValue placeholder="Ordenar por preço" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="asc">Preço Crescente</SelectItem>
-            <SelectItem value="desc">Preço Decrescente</SelectItem>
-          </SelectContent>
-        </Select>
+        
+        <div className="lg:w-1/3 w-full">
+          <Select onValueChange={setFiltroFornecedor} value={filtroFornecedor}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filtrar por fornecedor" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(fornecedores).map(([id, nome]) => (
+                <SelectItem key={id} value={id}>
+                  {nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="lg:w-1/3 w-full">
+          <Select onValueChange={setOrdemPreco} value={ordemPreco}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Ordenar por preço" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Preço Crescente</SelectItem>
+              <SelectItem value="desc">Preço Decrescente</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {result.length > 0 ? (
-        <Table className="w-full">
+      {/* Tabela responsiva */}
+      <div className="overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             <TableRow>
               <TableHead>Imagem</TableHead>
@@ -143,7 +151,7 @@ function ListOfResult() {
                 <TableCell>
                   {item.imagem && (
                     <img
-                      src={`http://localhost:3000${item.imagem}`}  // URL da imagem
+                      src={`http://localhost:3000${item.imagem}`}
                       alt={item.nome}
                       className="w-24 h-24 object-cover rounded-md"
                     />
@@ -151,11 +159,10 @@ function ListOfResult() {
                 </TableCell>
                 <TableCell>{item.nome}</TableCell>
                 <TableCell>{item.descricao}</TableCell>
-                <TableCell>{item.preco}</TableCell>
+                <TableCell>R$ {item.preco.toFixed(2).replace(".", ",")}</TableCell>
                 <TableCell>{item.quantidade}</TableCell>
                 <TableCell>{fornecedores[item.fornecedorId]}</TableCell>
                 <TableCell>
-                  {/* Verifica se o usuário é admin antes de renderizar as ações */}
                   {user && user.role === 'admin' && (
                     <div className="flex space-x-2">
                       <Link to={`/modify/${item.id}`}>
@@ -177,8 +184,12 @@ function ListOfResult() {
             ))}
           </TableBody>
         </Table>
-      ) : (
-        <p>Nenhum produto encontrado.</p>
+      </div>
+
+      {result.length === 0 && (
+        <div className="flex flex-col items-center justify-center mt-4">
+          <p className="text-lg font-semibold">Nenhum produto encontrado.</p>
+        </div>
       )}
     </div>
   );

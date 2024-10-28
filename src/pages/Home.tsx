@@ -26,7 +26,6 @@ const Home: React.FC = () => {
             <span className="feature-icon">👥</span>
             <h3>Gerenciamento de Clientes</h3>
             <p>Mantenha um registro completo de clientes e histórico de compras para atendimento personalizado.</p>
-            
           </div>
           <div className="feature">
             <span className="feature-icon">📊</span>

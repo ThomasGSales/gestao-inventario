@@ -14,7 +14,7 @@ interface DataToInsert {
   id?: string;
   nome: string;
   descricao: string;
-  preco: string;
+  preco: number;  // Agora é do tipo number
   quantidade: string;
   imagem: File | null;
   fornecedorId: string;
@@ -34,15 +34,15 @@ function FormData() {
   const [dataToInsert, setDataToInsert] = useState<DataToInsert>({
     nome: "",
     descricao: "",
-    preco: "",
+    preco: 0, // Inicializa como número
     quantidade: "",
     imagem: null,
-    fornecedorId: "",  });
+    fornecedorId: "",  
+  });
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const navigate = useNavigate();
   const { ProductID } = useParams<{ ProductID: string }>();
 
-  // Buscar fornecedores disponíveis
   useEffect(() => {
     fetch("http://localhost:3000/fornecedores")
       .then((res) => res.json())
@@ -50,7 +50,6 @@ function FormData() {
       .catch((err) => console.error("Erro ao buscar fornecedores:", err));
   }, []);
 
-  // Buscar dados do produto se ProductID estiver presente
   useEffect(() => {
     if (ProductID) {
       fetch(`http://localhost:3000/produtos/${ProductID}`)
@@ -60,7 +59,7 @@ function FormData() {
             id: foundItem.id.toString(),
             nome: foundItem.nome,
             descricao: foundItem.descricao,
-            preco: foundItem.preco.toString(),
+            preco: foundItem.preco,
             quantidade: foundItem.quantidade.toString(),
             imagem: null,
             fornecedorId: foundItem.fornecedorId.toString(),
@@ -70,26 +69,25 @@ function FormData() {
     }
   }, [ProductID]);
 
-  // No handleSubmit, o código permanece o mesmo
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new window.FormData();
-  
+
     formData.append("nome", dataToInsert.nome);
     formData.append("descricao", dataToInsert.descricao);
-    formData.append("preco", dataToInsert.preco);
+    formData.append("preco", dataToInsert.preco.toString()); // Converte para string
     formData.append("quantidade", dataToInsert.quantidade);
     formData.append("fornecedorId", dataToInsert.fornecedorId);
-  
+
     if (dataToInsert.imagem) {
       formData.append("imagem", dataToInsert.imagem);
     }
-  
+
     const method = ProductID ? "PUT" : "POST";
     const url = ProductID
       ? `http://localhost:3000/produtos/${ProductID}`
       : "http://localhost:3000/produtos";
-  
+
     fetch(url, {
       method: method,
       body: formData,
@@ -119,9 +117,11 @@ function FormData() {
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
     setDataToInsert({
       ...dataToInsert,
-      [e.target.name]: e.target.value,
+      [name]: name === "preco" ? parseFloat(value) : value, // Converte 'preco' para float
     });
   };
 
@@ -154,6 +154,7 @@ function FormData() {
           <Label htmlFor="preco">Preço</Label>
           <Input
             type="number"
+            step="0.01"  // Permite valores decimais
             value={dataToInsert.preco}
             name="preco"
             onChange={handleChange}

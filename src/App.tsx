@@ -10,6 +10,7 @@ import TransacoesFinanceiras from './pages/TransacoesFinanceiras';
 import FormData from './components/FormData';
 import FormFornecedor from './components/FormFornecedor';
 import FormPedidos from './components/FormPedidos';
+import FormClientes from './components/FormClientes';
 import Sobre from './pages/Sobre';
 import './App.css';
 import Login from './pages/Login';
@@ -91,6 +92,8 @@ function App() {
         <Route path="/editpedido/:id" element={<PrivateRoute user={user} loading={loading}><FormPedidos /></PrivateRoute>} />
 
         <Route path="/clientes" element={<PrivateRoute user={user} loading={loading}><Clientes /></PrivateRoute>} />
+        <Route path="/clientes/new" element={<PrivateRoute user={user} requiredRole="admin" loading={loading}><FormClientes /></PrivateRoute>} />
+        <Route path="/clientes/edit/:id" element={<PrivateRoute user={user} requiredRole="admin" loading={loading}><FormClientes /></PrivateRoute>} />
 
         {/* Outras rotas protegidas */}
         <Route path="/itenspedidos" element={<PrivateRoute user={user} loading={loading}><ItensPedidos /></PrivateRoute>} />

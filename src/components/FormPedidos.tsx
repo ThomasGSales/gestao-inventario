@@ -9,8 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import api from "@/utils/api";  // Usando Axios para chamadas API
-import { Trash } from "lucide-react";  // Importando o ícone de lixeira
+import api from "@/utils/api";
+import { Trash } from "lucide-react";
 
 interface Produto {
   id: number;
@@ -26,7 +26,7 @@ interface Cliente {
 interface ItemPedido {
   produtoId: number;
   quantidade: number;
-  precoUnitario: string; // Manter como string para exibir a formatação
+  precoUnitario: string;
 }
 
 function FormPedidos() {
@@ -39,48 +39,48 @@ function FormPedidos() {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { id } = useParams();  // Para editar, obtemos o ID do pedido via URL
+  const { id } = useParams();
 
   useEffect(() => {
-    // Fetch Clientes
-    api.get("/clientes")
-      .then((res) => setClientes(res.data))
-      .catch((err) => setError(`Erro ao carregar clientes: ${err.message}`));
-  
-    // Fetch Produtos
-    api.get("/produtos")
-      .then((res) => setProdutos(res.data))
-      .catch((err) => setError(`Erro ao carregar produtos: ${err.message}`));
-    
-    // Se estivermos editando, buscar dados do pedido
-    if (id) {
-      api.get(`/pedidos/${id}`)
-        .then((res) => {
-          const pedido = res.data;
-  
-          if (!pedido.itens) {
-            setError("Itens do pedido não encontrados.");
-            return;
-          }
-  
+    // Fetch Clientes e Produtos
+    const fetchData = async () => {
+      try {
+        const [clientesRes, produtosRes] = await Promise.all([
+          api.get("/clientes"),
+          api.get("/produtos")
+        ]);
+        setClientes(clientesRes.data);
+        setProdutos(produtosRes.data);
+
+        if (id) {
+          // Carrega o pedido se estivermos editando
+          const pedidoRes = await api.get(`/pedidos/${id}`);
+          const pedido = pedidoRes.data;
+
+          if (!pedido.itens) throw new Error("Itens do pedido não encontrados.");
+
           setClienteId(pedido.clienteId);
           setStatus(pedido.status);
-          // Verifica se `pedido.itens` existe antes de fazer o mapeamento
-          setItens(pedido.itens?.map((item: any) => ({
+          setItens(pedido.itens.map((item: any) => ({
             ...item,
-            precoUnitario: formatPrice(item.precoUnitario), // Formata o preço inicial
-          })) || []);
-        })
-        .catch((err) => setError(`Erro ao carregar pedido: ${err.message}`));
-    }
+            precoUnitario: formatPrice(item.precoUnitario)
+          })));
+        }
+      } catch (err: any) {
+        setError(`Erro ao carregar dados: ${err.message}`);
+      }
+    };
+
+    fetchData();
   }, [id]);
-  // Função para formatar o preço (maior que 0 e com 2 casas decimais)
+
+  // Função para formatar o preço
   const formatPrice = (price: number | string) => {
     const num = typeof price === "string" ? parseFloat(price) : price;
-    return num > 0 ? num.toFixed(2).replace(".", ",") : "1,00"; // Garantindo valor mínimo 1,00
+    return num > 0 ? num.toFixed(2).replace(".", ",") : "1,00";
   };
 
-  // Formata o preço somente quando o input perde o foco
+  // Formata o preço quando o input perde o foco
   const handleBlurPrice = (index: number) => {
     const updatedItens = [...itens];
     const price = parseFloat(updatedItens[index].precoUnitario.replace(",", "."));
@@ -99,23 +99,22 @@ function FormPedidos() {
   };
 
   const handleRemoveItem = (index: number) => {
-    const updatedItens = itens.filter((_, i) => i !== index);
-    setItens(updatedItens);
+    setItens(itens.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+  
     const payload = {
       clienteId,
       status,
       itens: itens.map(item => ({
         ...item,
-        precoUnitario: parseFloat(item.precoUnitario.replace(",", "."))  // Converter para número antes de enviar
+        precoUnitario: parseFloat(item.precoUnitario.replace(",", "."))
       })),
     };
-
+  
     try {
       if (id) {
         // Editando pedido
@@ -124,7 +123,7 @@ function FormPedidos() {
         // Criando novo pedido
         await api.post("/pedidos", payload);
       }
-      navigate("/pedidos");  // Redireciona para a lista de pedidos
+      navigate("/pedidos");
     } catch (err: any) {
       setError(`Erro ao salvar pedido: ${err.message}`);
     } finally {
@@ -140,18 +139,20 @@ function FormPedidos() {
 
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <Select onValueChange={(value) => setClienteId(Number(value))} value={clienteId?.toString() || ""}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um cliente" />
-            </SelectTrigger>
-            <SelectContent>
-              {clientes.map((cliente) => (
-                <SelectItem key={cliente.id} value={cliente.id.toString()}>
-                  {cliente.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {clientes.length > 0 && (
+            <Select onValueChange={(value) => setClienteId(Number(value))} value={clienteId?.toString() || ""}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                {clientes.map((cliente) => (
+                  <SelectItem key={cliente.id} value={cliente.id.toString()}>
+                    {cliente.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="mb-4">
@@ -198,11 +199,10 @@ function FormPedidos() {
                 type="text"
                 value={item.precoUnitario}
                 onChange={(e) => handleItemChange(index, "precoUnitario", e.target.value)}
-                onBlur={() => handleBlurPrice(index)}  // Formata o preço quando o campo perde o foco
+                onBlur={() => handleBlurPrice(index)}
                 placeholder="Preço Unitário"
               />
 
-              {/* Ícone de lixeira para remover item */}
               <Button
                 variant="destructive"
                 size="icon"
