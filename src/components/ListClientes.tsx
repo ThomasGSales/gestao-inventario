@@ -108,7 +108,6 @@ function ListClientes() {
 
         <div className="lg:w-1/3 w-full">
           <Input
-            className="lg:w-1/3 w-full"
             placeholder="Filtrar por CPF/CNPJ"
             value={filtroCpfCnpj}
             onChange={(e) => setFiltroCpfCnpj(e.target.value)}
@@ -117,7 +116,7 @@ function ListClientes() {
 
         <div className="lg:w-1/3 w-full">
           <Select onValueChange={setOrdem} value={ordem}>
-            <SelectTrigger className="lg:w-1/3 w-full">
+            <SelectTrigger>
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
