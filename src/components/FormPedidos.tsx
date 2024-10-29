@@ -132,7 +132,7 @@ function FormPedidos() {
   };
 
   return (
-    <div className="p-4">
+    <div className="absolute top-16 left-4 max-w-md p-4">
       <h1 className="text-2xl font-bold mb-4">{id ? "Editar Pedido" : "Adicionar Pedido"}</h1>
 
       {error && <p className="text-red-500">{error}</p>}

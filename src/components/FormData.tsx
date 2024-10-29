@@ -126,7 +126,7 @@ function FormData() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="absolute top-16 left-4 max-w-md p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="nome">Nome do Produto</Label>
