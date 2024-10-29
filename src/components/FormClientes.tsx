@@ -19,7 +19,6 @@ function FormClientes() {
 
   useEffect(() => {
     if (id) {
-      // Buscar cliente existente para edição
       api.get(`/clientes/${id}`)
         .then((res) => setCliente(res.data))
         .catch((err) => setError(`Erro ao carregar cliente: ${err.message}`));
@@ -30,46 +29,14 @@ function FormClientes() {
     setCliente({ ...cliente, [e.target.name]: e.target.value });
   };
 
-  // Função para aplicar a máscara de CPF ou CNPJ
-  const handleCpfCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
-    if (value.length <= 11) {
-      // CPF
-      value = value.replace(/(\d{3})(\d)/, "$1.$2");
-      value = value.replace(/(\d{3})(\d)/, "$1.$2");
-      value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-    } else {
-      // CNPJ
-      value = value.replace(/^(\d{2})(\d)/, "$1.$2");
-      value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
-      value = value.replace(/\.(\d{3})(\d)/, ".$1/$2");
-      value = value.replace(/(\d{4})(\d)/, "$1-$2");
-    }
-    setCliente({ ...cliente, cpf_cnpj: value });
-  };
-
-  // Função para aplicar a máscara de celular
-  const handleContatoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
-    value = value.replace(/^(\d{2})(\d)/g, "($1) $2");  // Adiciona parênteses no DDD
-    if (value.length >= 11) {
-      value = value.replace(/(\d{5})(\d{4})$/, "$1-$2");  // Adiciona hífen entre o número
-    } else {
-      value = value.replace(/(\d{4})(\d{0,4})$/, "$1-$2");  // Adiciona hífen para números menores
-    }
-    setCliente({ ...cliente, contato: value });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (id) {
-        // Atualiza cliente existente
         await api.put(`/clientes/${id}`, cliente);
       } else {
-        // Cria um novo cliente
         await api.post("/clientes", cliente);
       }
       navigate("/clientes");
@@ -81,12 +48,12 @@ function FormClientes() {
   };
 
   return (
-    <div className="p-4">
+    <div className="absolute top-16 left-4 max-w-md p-4">
       <h1 className="text-2xl font-bold mb-4">{id ? "Editar Cliente" : "Adicionar Cliente"}</h1>
 
       {error && <p className="text-red-500">{error}</p>}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           name="nome"
           value={cliente.nome}
@@ -97,18 +64,18 @@ function FormClientes() {
         <Input
           name="cpf_cnpj"
           value={cliente.cpf_cnpj}
-          onChange={handleCpfCnpjChange}  // Usando a função de máscara CPF/CNPJ
+          onChange={handleChange}
           placeholder="CPF/CNPJ"
           required
-          maxLength={18}  // Limite de 18 caracteres contando os pontos, barras e hífen
+          maxLength={18}
         />
         <Input
           name="contato"
           value={cliente.contato}
-          onChange={handleContatoChange}  // Usando a função de máscara de celular
+          onChange={handleChange}
           placeholder="Contato"
           required
-          maxLength={15}  // Limite de 15 caracteres (formato (XX) XXXXX-XXXX)
+          maxLength={15}
         />
         <Input
           name="endereco"
@@ -116,8 +83,7 @@ function FormClientes() {
           onChange={handleChange}
           placeholder="Endereço"
         />
-
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="mt-4">
           {loading ? "Salvando..." : "Salvar Cliente"}
         </Button>
       </form>
