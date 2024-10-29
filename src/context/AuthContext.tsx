@@ -5,6 +5,7 @@ import api from '../utils/api';
 interface AuthContextData {
   user: { id: string; name: string; role: string } | null;
   token: string | null;
+  loading: boolean;  // Novo estado de carregamento
   login: (email: string, senha: string) => Promise<void>;
   register: (nome: string, email: string, senha: string, role?: string) => Promise<void>;
   logout: () => void;
@@ -26,6 +27,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<{ id: string; name: string; role: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);  // Adiciona o estado de carregamento
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -34,6 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false);  // Termina o carregamento após ler o localStorage
   }, []);
 
   const login = async (email: string, senha: string) => {
@@ -57,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
