@@ -18,6 +18,7 @@ import Registro from './pages/Registro';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Button } from "@/components/ui/button";
 import PrivateRoute from "@/components/PrivateRoute";
+import Relatorios from './pages/Relatorios';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,6 +50,7 @@ function App() {
                   {/* <li><Link to="/itenspedidos" onClick={() => setMenuOpen(false)}>Itens Pedidos</Link></li> */}
                   <li><Link to="/clientes" onClick={() => setMenuOpen(false)}>Clientes</Link></li>
                   <li><Link to="/transacoes" onClick={() => setMenuOpen(false)}>Transações Financeiras</Link></li>
+                  <li><Link to="/relatorios" onClick={() => setMenuOpen(false)}>Relatórios</Link></li>
                 </>
               )}
 
@@ -98,6 +100,7 @@ function App() {
         {/* Outras rotas protegidas */}
         <Route path="/itenspedidos" element={<PrivateRoute user={user} loading={loading}><ItensPedidos /></PrivateRoute>} />
         <Route path="/transacoes" element={<PrivateRoute user={user} loading={loading}><TransacoesFinanceiras /></PrivateRoute>} />
+        <Route path="/relatorios" element={<PrivateRoute user={user} loading={loading}><Relatorios /></PrivateRoute>} />
         <Route path="/modify/:ProductID" element={<PrivateRoute user={user} loading={loading}><FormData /></PrivateRoute>} />
         <Route path="/add" element={<PrivateRoute user={user} loading={loading}><FormData /></PrivateRoute>} />
       </Routes>

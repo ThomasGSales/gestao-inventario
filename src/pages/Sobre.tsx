@@ -1,11 +1,11 @@
-import kermitImage from '../assets/kermit.jpg'
+import kermitImage from '../assets/kermit.jpg';
 
 const Sobre = () => {
   return (
     <div className="p-6">
-      <h1>Sobre</h1>
-      <p>Projeto feito na aula de programacao web</p>
-      <img src={kermitImage} alt="Kermit" width={512}></img>
+      <h1 className="text-4xl font-bold mb-4">Sobre</h1>
+      <p className="mb-4">Projeto feito na aula de programação web</p>
+      <img src={kermitImage} alt="Kermit" width={512} className="mt-4" />
     </div>
   );
 };

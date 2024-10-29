@@ -26,7 +26,6 @@ function ListFornecedores() {
 
   // Fetch fornecedores com filtro e ordenação
   const fetchFornecedores = () => {
-    // Parâmetros de filtro e ordenação na query string
     const query = `/fornecedores?ordem=${encodeURIComponent(ordemNome)}&filtro=${encodeURIComponent(filtro)}`;
 
     setLoading(true);
@@ -36,14 +35,12 @@ function ListFornecedores() {
       .finally(() => setLoading(false));
   };
 
-  // Efeito para buscar fornecedores ao mudar o filtro ou a ordem
   useEffect(() => {
     fetchFornecedores();
-  }, [filtro, ordemNome]);  // Atualiza quando o filtro ou a ordem mudar
+  }, [filtro, ordemNome]);
 
   const handleDelete = (id: number) => {
     if (confirm("Tem certeza que deseja excluir este fornecedor?")) {
-      // Excluir fornecedor
       api.delete(`/fornecedores/${id}`)
         .then(() => {
           setFornecedores(fornecedores.filter((item) => item.FornecedorID !== id));
@@ -57,20 +54,18 @@ function ListFornecedores() {
 
   return (
     <div className="p-4 overflow-x-auto">
-      {/* Filtro de Nome ou Contato */}
-      <div className="mb-4">
+      {/* Filtro e Ordenação */}
+      <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-2 lg:space-y-0 mb-4">
         <Input
+          className="w-full lg:w-1/3"
           type="text"
           placeholder="Filtrar por nome ou contato"
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
         />
-      </div>
-
-      {/* Ordenação por Nome */}
-      <div className="flex space-x-4 mb-4">
+        
         <Select onValueChange={setOrdemNome} value={ordemNome}>
-          <SelectTrigger>
+          <SelectTrigger className="w-full lg:w-1/3">
             <SelectValue placeholder="Ordenar por Nome" />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +111,6 @@ function ListFornecedores() {
                       </Button>
                     </>
                   )}
-                  {/* Usuário comum (user) não verá as opções de edição e exclusão */}
                 </div>
               </TableCell>
             </TableRow>

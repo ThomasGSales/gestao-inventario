@@ -22,16 +22,15 @@ function FormFornecedor() {
   });
 
   const navigate = useNavigate();
-  const { FornecedorID } = useParams<{ FornecedorID: string }>(); // ID opcional para edição
+  const { FornecedorID } = useParams<{ FornecedorID: string }>();
 
   useEffect(() => {
     if (FornecedorID) {
-      // Buscar dados do fornecedor para edição
       fetch(`http://localhost:3000/fornecedores/${FornecedorID}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('token')}`, // Incluindo o token JWT
+          "Authorization": `Bearer ${localStorage.getItem('token')}`,
         },
       })
         .then((res) => {
@@ -58,7 +57,7 @@ function FormFornecedor() {
       body: JSON.stringify(fornecedor),
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('token')}`, // Incluindo o token JWT
+        "Authorization": `Bearer ${localStorage.getItem('token')}`,
       },
     })
       .then((res) => {
@@ -77,13 +76,14 @@ function FormFornecedor() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="absolute top-16 left-4 max-w-md p-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="Nome">Nome do Fornecedor</Label>
+          <Label htmlFor="Nome" className="mb-1 font-medium">Nome do Fornecedor</Label>
           <Input
             type="text"
             name="Nome"
+            className="w-full"
             value={fornecedor.Nome}
             onChange={handleChange}
             placeholder="Nome do Fornecedor"
@@ -91,10 +91,11 @@ function FormFornecedor() {
           />
         </div>
         <div>
-          <Label htmlFor="CNPJ">CNPJ</Label>
+          <Label htmlFor="CNPJ" className="mb-1 font-medium">CNPJ</Label>
           <Input
             type="text"
             name="CNPJ"
+            className="w-full"
             value={fornecedor.CNPJ}
             onChange={handleChange}
             placeholder="CNPJ"
@@ -102,10 +103,11 @@ function FormFornecedor() {
           />
         </div>
         <div>
-          <Label htmlFor="Contato">Contato</Label>
+          <Label htmlFor="Contato" className="mb-1 font-medium">Contato</Label>
           <Input
             type="text"
             name="Contato"
+            className="w-full"
             value={fornecedor.Contato}
             onChange={handleChange}
             placeholder="Contato"
@@ -113,16 +115,17 @@ function FormFornecedor() {
           />
         </div>
         <div>
-          <Label htmlFor="Endereco">Endereço</Label>
+          <Label htmlFor="Endereco" className="mb-1 font-medium">Endereço</Label>
           <Input
             type="text"
             name="Endereco"
+            className="w-full"
             value={fornecedor.Endereco}
             onChange={handleChange}
             placeholder="Endereço"
           />
         </div>
-        <Button type="submit">{FornecedorID ? "Atualizar" : "Salvar"}</Button>
+        <Button type="submit" className="w-full lg:w-1/2 mx-auto">{FornecedorID ? "Atualizar" : "Salvar"}</Button>
       </form>
     </div>
   );
