@@ -1,50 +1,76 @@
-# React + TypeScript + Vite
+# Sistema de Gestão de Inventário - React + TypeScript + Vite
+## Visão Geral
+Este projeto é um sistema de gerenciamento de inventário, projetado para facilitar o controle de produtos, clientes, fornecedores, pedidos, transações financeiras e usuários. Ele utiliza uma arquitetura baseada em React com TypeScript para o frontend e Node.js com SQLite para o backend.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Objetivo do Projeto
+O sistema permite o cadastro, edição, exclusão e listagem de diferentes entidades como produtos, clientes, e fornecedores, além de funcionalidades de busca avançada e filtragem. A aplicação é responsiva, com controle de acesso baseado em permissões, e fornece relatórios detalhados para apoiar a tomada de decisão.
 
-Currently, two official plugins are available:
+## Funcionalidades Principais
+1. **Gestão de Produtos**: CRUD de produtos, incluindo upload de imagens.
+2. **Gestão de Clientes e Fornecedores**: Cadastro, edição, exclusão e filtros para clientes e fornecedores.
+3. **Controle de Pedidos e Itens**: Criação de pedidos e gerenciamento de itens de pedido associados.
+4. **Transações Financeiras**: Registro de entradas e saídas de produtos.
+5. **Autenticação de Usuários**: Registro e login com controle de permissões.
+6. **Relatórios Detalhados**: Estoque, transações financeiras e vendas.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Estrutura do Projeto
 
-## Expanding the ESLint configuration
+O projeto está dividido em duas pastas principais:
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Backend (inventoryapp/db)**: Contém a lógica de negócios e APIs para a aplicação.
+- **Frontend (inventoryapp)**: Interface do usuário construída com React.
 
-- Configure the top-level `parserOptions` property like this:
+## Configurando o Frontend
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+Para configurar o frontend, siga os passos abaixo:
+
+1. No terminal, navegue até a pasta principal da aplicação:
+   ```bash
+   cd inventoryapp
+   ```
+2. Instale o ReactDOM para navegação
+   ```bash
+   npm install react-router-dom
+   ```
+
+## Configuração do Backend
+
+Para iniciar o backend, siga os passos abaixo:
+
+ 1. Navegue até a pasta do backend e faça os seguintes comandos:
+   ```bash
+cd inventoryapp/db
+   ```
+  ```bash
+npm init -y
+  ```
+  ```bash
+npm i nodemon -D
+  ```
+  ```bash
+npm i sqlite3
+  ```
+ ```bash
+npm install multer express bcryptjs jsonwebtoken cors
+ ```
+2. Para iniciar o servidor, use o comando:
+  ```bash
+   npx nodemon server.js
+  ```
+3. Para iniciar a aplicação, use o comando:
+```bash
+npm run dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Tecnologias Utilizadas
+- Frontend: ReactJS + TypeScript + Vite + Shadcn/ui.
+- Backend: Node.js + Express.
+- Banco de Dados: SQLite.
+- Autenticação: JsonWebToken e Bcrypt para hash de senhas.
+- Controle de Imagens: Upload via Multer.
+- Controle de CORS: Middleware de segurança CORS configurado.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+
+
+
