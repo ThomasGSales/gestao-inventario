@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import api from "@/utils/api";  // Use a instância Axios configurada
-import { useAuth } from '@/context/AuthContext'; // Importando o contexto de autenticação
+import api from "@/utils/api"; // Instância do Axios configurada
 
 interface Pedido {
   id: number;
@@ -37,13 +29,10 @@ function ListPedidos() {
   const [filtroStatus, setFiltroStatus] = useState<string>("");
   const [ordemTotal, setOrdemTotal] = useState<string>("");
 
-  const { user } = useAuth(); // Obtendo o papel do usuário
-
-  // Fetch pedidos com filtro
   const fetchPedidos = () => {
-    let query = `/pedidos?`;  // Base URL configurada no api.ts
+    let query = `/pedidos?`;
 
-    if (filtroCliente) {
+    if (filtroCliente && !isNaN(Number(filtroCliente))) {
       query += `clienteId=${encodeURIComponent(filtroCliente)}&`;
     }
     if (filtroStatus) {
@@ -53,7 +42,7 @@ function ListPedidos() {
       query += `ordemTotal=${encodeURIComponent(ordemTotal)}&`;
     }
 
-    api.get(query)  // Usando api (Axios) para fazer a requisição
+    api.get(query)
       .then((res) => setPedidos(res.data))
       .catch((err) => setError(`Erro ao carregar pedidos: ${err.message}`))
       .finally(() => setLoading(false));
@@ -65,7 +54,7 @@ function ListPedidos() {
 
   const handleDelete = (id: number) => {
     if (confirm("Tem certeza que deseja excluir este pedido?")) {
-      api.delete(`/pedidos/${id}`)  // Usando api (Axios) para deletar pedido
+      api.delete(`/pedidos/${id}`)
         .then(() => {
           setPedidos(pedidos.filter((pedido) => pedido.id !== id));
         })
@@ -77,15 +66,18 @@ function ListPedidos() {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="p-4 overflow-x-auto">
-      <div className="flex space-x-4 mb-4">
+    <div className="p-4">
+      <div className="flex flex-col lg:flex-row lg:space-x-4 space-y-2 lg:space-y-0 mb-4">
         <Input
+          className="lg:w-1/3 w-full"
           placeholder="Filtrar por cliente ID"
           value={filtroCliente}
           onChange={(e) => setFiltroCliente(e.target.value)}
+          type="number"
         />
+
         <Select onValueChange={setFiltroStatus} value={filtroStatus}>
-          <SelectTrigger>
+          <SelectTrigger className="lg:w-1/3 w-full">
             <SelectValue placeholder="Filtrar por status" />
           </SelectTrigger>
           <SelectContent>
@@ -93,8 +85,9 @@ function ListPedidos() {
             <SelectItem value="Concluído">Concluído</SelectItem>
           </SelectContent>
         </Select>
+
         <Select onValueChange={setOrdemTotal} value={ordemTotal}>
-          <SelectTrigger>
+          <SelectTrigger className="lg:w-1/3 w-full">
             <SelectValue placeholder="Ordenar por total" />
           </SelectTrigger>
           <SelectContent>
@@ -104,28 +97,28 @@ function ListPedidos() {
         </Select>
       </div>
 
-      {pedidos.length > 0 ? (
-        <Table className="w-full">
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Cliente ID</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pedidos.map((pedido) => (
-              <TableRow key={pedido.id}>
-                <TableCell>{pedido.id}</TableCell>
-                <TableCell>{pedido.clienteId}</TableCell>
-                <TableCell>{pedido.status}</TableCell>
-                <TableCell>R$ {pedido.total.toFixed(2)}</TableCell>
-                <TableCell>{pedido.data}</TableCell>
-                <TableCell>
-                  {user && user.role === 'admin' && (
+      <div className="overflow-x-auto">
+        {pedidos.length > 0 ? (
+          <Table className="min-w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Cliente ID</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pedidos.map((pedido) => (
+                <TableRow key={pedido.id}>
+                  <TableCell>{pedido.id}</TableCell>
+                  <TableCell>{pedido.clienteId}</TableCell>
+                  <TableCell>{pedido.status}</TableCell>
+                  <TableCell>R$ {pedido.total.toFixed(2)}</TableCell>
+                  <TableCell>{pedido.data}</TableCell>
+                  <TableCell>
                     <div className="flex space-x-2">
                       <Link to={`/editpedido/${pedido.id}`}>
                         <Button variant="default" size="sm">
@@ -140,17 +133,15 @@ function ListPedidos() {
                         Excluir
                       </Button>
                     </div>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : (
-        <div className="flex flex-col items-center justify-center">
-          <p className="text-lg font-semibold">Nenhum pedido encontrado.</p>
-        </div>
-      )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <p className="text-center">Nenhum pedido encontrado.</p>
+        )}
+      </div>
     </div>
   );
 }

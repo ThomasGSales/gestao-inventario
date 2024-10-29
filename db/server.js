@@ -263,17 +263,6 @@ app.delete('/produtos/:id', (req, res) => {
   });
 });
 
-// Rotas para Fornecedores (sem token de autenticação)
-// app.get('/fornecedores', (req, res) => {
-//   db.all('SELECT * FROM Fornecedores', (err, rows) => {
-//     if (err) {
-//       res.status(500).json({ error: err.message });
-//     } else {
-//       res.status(200).json(rows);
-//     }
-//   });
-// });
-
 app.get('/fornecedores', (req, res) => {
   const { ordem, filtro } = req.query;
   let query = `SELECT * FROM Fornecedores WHERE 1=1`;
@@ -413,7 +402,8 @@ db.run(
 
 // Rota para listar todos os pedidos
 app.get('/pedidos', (req, res) => {
-  const { data, status, ordemTotal } = req.query;
+  const { clienteId, status, ordemTotal } = req.query;
+  
   let query = `
     SELECT Pedidos.*, Clientes.nome AS clienteNome
     FROM Pedidos
@@ -422,14 +412,19 @@ app.get('/pedidos', (req, res) => {
   `;
   const queryParams = [];
 
-  if (data) {
-    query += ' AND Pedidos.data = ?';
-    queryParams.push(data);
+  // Adiciona o filtro de clienteId se fornecido e for um número válido
+  if (clienteId && !isNaN(clienteId)) {
+    query += ' AND Pedidos.clienteId = ?';
+    queryParams.push(Number(clienteId));
   }
+
+  // Adiciona o filtro de status se fornecido
   if (status) {
     query += ' AND Pedidos.status = ?';
     queryParams.push(status);
   }
+
+  // Ordena pelo total se especificado
   if (ordemTotal) {
     query += ` ORDER BY Pedidos.total ${ordemTotal === 'asc' ? 'ASC' : 'DESC'}`;
   }
@@ -532,31 +527,52 @@ app.post('/pedidos', (req, res) => {
 // Rota para atualizar um pedido
 app.put('/pedidos/:id', (req, res) => {
   const { id } = req.params;
-  const { status, itens } = req.body;
+  const { clienteId, status, itens } = req.body;
 
-  if (!status && !itens) {
-    return res.status(400).send('Status ou itens do pedido devem ser fornecidos.');
+  if (!clienteId && !status && !itens) {
+    return res.status(400).send('ClienteId, status ou itens do pedido devem ser fornecidos.');
   }
 
-  // Atualizar o status do pedido, se fornecido
-  if (status) {
-    db.run(`UPDATE Pedidos SET status = ? WHERE id = ?`, [status, id], function (err) {
+  // Atualizar o clienteId e o status do pedido, se fornecidos
+  if (clienteId || status) {
+    let updateFields = [];
+    let updateValues = [];
+
+    if (clienteId) {
+      updateFields.push('clienteId = ?');
+      updateValues.push(clienteId);
+    }
+
+    if (status) {
+      updateFields.push('status = ?');
+      updateValues.push(status);
+    }
+
+    updateValues.push(id);
+
+    const updateQuery = `UPDATE Pedidos SET ${updateFields.join(', ')} WHERE id = ?`;
+
+    db.run(updateQuery, updateValues, function (err) {
       if (err) {
         return res.status(500).json({ error: err.message });
+      }
+      // Se não houver itens para atualizar, enviar resposta de sucesso
+      if (!itens || !itens.length) {
+        return res.status(200).json({ success: true });
       }
     });
   }
 
-  // Se houver itens, primeiro apagamos os itens antigos e depois inserimos os novos
+  // Se houver itens, processá-los
   if (itens && itens.length) {
     db.run(`DELETE FROM ItensPedido WHERE pedidoId = ?`, [id], (err) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
-      // Inserir os novos itens
       let total = 0;
-      let itemsProcessed = 0; // Contador de itens processados
+      let itemsProcessed = 0;
+
       itens.forEach((item) => {
         const { produtoId, quantidade, precoUnitario } = item;
         total += quantidade * precoUnitario;
@@ -570,18 +586,14 @@ app.put('/pedidos/:id', (req, res) => {
               return res.status(500).json({ error: err.message });
             }
 
-            // Incrementar o contador de itens processados
             itemsProcessed += 1;
 
-            // Verificar se todos os itens foram processados
             if (itemsProcessed === itens.length) {
-              // Atualizar o total do pedido depois que todos os itens foram inseridos
               db.run(`UPDATE Pedidos SET total = ? WHERE id = ?`, [total, id], (err) => {
                 if (err) {
                   return res.status(500).json({ error: err.message });
                 }
 
-                // Resposta final após a atualização completa
                 res.status(200).json({ success: true });
               });
             }
@@ -589,12 +601,9 @@ app.put('/pedidos/:id', (req, res) => {
         );
       });
     });
-  } else {
-    // Se não houver itens para atualizar, apenas envia uma resposta de sucesso
-    if (!status) {
-      // Se status também não foi atualizado, garantir que uma resposta seja enviada
-      res.status(200).json({ success: true });
-    }
+  } else if (!clienteId && !status) {
+    // Se nenhum campo foi atualizado, enviar resposta de sucesso
+    res.status(200).json({ success: true });
   }
 });
 
@@ -648,7 +657,9 @@ app.get('/clientes', (req, res) => {
     query += ` AND cpf_cnpj LIKE ?`;
     queryParams.push(`%${cpf_cnpj}%`);
   }
-  if (ordem) {
+
+  // Verifica se a ordem é por um dos campos válidos
+  if (ordem === 'nome' || ordem === 'cpf_cnpj') {
     query += ` ORDER BY ${ordem}`;
   }
 
