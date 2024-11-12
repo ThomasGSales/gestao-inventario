@@ -26,7 +26,43 @@ function FormClientes() {
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCliente({ ...cliente, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "cpf_cnpj") {
+      setCliente({ ...cliente, cpf_cnpj: maskCPF_CNPJ(value) });
+    } else if (name === "contato") {
+      setCliente({ ...cliente, contato: maskContato(value) });
+    } else {
+      setCliente({ ...cliente, [name]: value });
+    }
+  };
+
+  // Função para aplicar máscara de CPF/CNPJ
+  const maskCPF_CNPJ = (value: string) => {
+    value = value.replace(/\D/g, "");
+
+    if (value.length <= 11) {
+      return value
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+      return value
+        .replace(/^(\d{2})(\d)/, "$1.$2")
+        .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1/$2")
+        .replace(/(\d{4})(\d)/, "$1-$2")
+        .substring(0, 18);
+    }
+  };
+
+  // Função para aplicar máscara de telefone
+  const maskContato = (value: string) => {
+    return value
+      .replace(/\D/g, "")
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2")
+      .substring(0, 15);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,7 +77,12 @@ function FormClientes() {
       }
       navigate("/clientes");
     } catch (err: any) {
-      setError(`Erro ao salvar cliente: ${err.message}`);
+      // Verifica se o erro está relacionado ao CPF/CNPJ duplicado
+      if (err.response && err.response.data.message === 'CPF/CNPJ já cadastrado') {
+        setError("CPF/CNPJ já cadastrado. Por favor, utilize um valor diferente.");
+      } else {
+        setError(`Erro ao salvar cliente: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
