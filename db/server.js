@@ -299,8 +299,15 @@ app.get('/fornecedores/:id', (req, res) => {
   });
 });
 
-app.post('/fornecedores', (req, res) => {
+app.post('/fornecedores', async (req, res) => {
   const { Nome, CNPJ, Contato, Endereco } = req.body;
+
+  const fornecedorExistente = await db.get('SELECT * FROM Fornecedores WHERE CNPJ = ?', [CNPJ]);
+
+  if (fornecedorExistente) {
+    return res.status(400).json({ message: 'CNPJ já cadastrado' });
+  }
+
   db.run(
     `INSERT INTO Fornecedores (Nome, CNPJ, Contato, Endereco) VALUES (?, ?, ?, ?)`,
     [Nome, CNPJ, Contato, Endereco],
@@ -687,11 +694,17 @@ app.get('/clientes/:id', (req, res) => {
 });
 
 // Criar um novo cliente
-app.post('/clientes', (req, res) => {
+app.post('/clientes', async (req, res) => {
   const { nome, cpf_cnpj, contato, endereco } = req.body;
 
   if (!nome || !cpf_cnpj || !contato) {
     return res.status(400).send('Nome, CPF/CNPJ e Contato são obrigatórios.');
+  }
+
+  const clienteExistente = await db.get('SELECT * FROM Clientes WHERE cpf_cnpj = ?', [cpf_cnpj]);
+
+  if (clienteExistente) {
+    return res.status(400).json({ message: 'CPF/CNPJ já cadastrado' });
   }
 
   db.run(
@@ -748,6 +761,218 @@ app.delete('/clientes/:id', (req, res) => {
           res.status(200).json({ success: true });
         }
       });
+    }
+  });
+});
+
+// Rota para obter o histórico de pedidos de um cliente específico
+app.get('/clientes/:clienteId/pedidos', (req, res) => {
+  const { clienteId } = req.params;
+  const { status } = req.query;
+
+  let query = `
+    SELECT Pedidos.*, GROUP_CONCAT(Produtos.nome || '|' || ItensPedido.quantidade || '|' || ItensPedido.precoUnitario, ';') AS itens
+    FROM Pedidos
+    JOIN ItensPedido ON Pedidos.id = ItensPedido.pedidoId
+    JOIN Produtos ON ItensPedido.produtoId = Produtos.id
+    WHERE Pedidos.clienteId = ?
+  `;
+  const queryParams = [clienteId];
+
+  if (status) {
+    query += ' AND Pedidos.status = ?';
+    queryParams.push(status);
+  }
+
+  query += ' GROUP BY Pedidos.id';
+
+  db.all(query, queryParams, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      const pedidos = rows.map((row) => {
+        const itens = row.itens.split(";").map((item) => {
+          const [nome, quantidade, precoUnitario] = item.split("|");
+          return {
+            nome,
+            quantidade: parseInt(quantidade),
+            precoUnitario: parseFloat(precoUnitario),
+          };
+        });
+        return { ...row, itens };
+      });
+      res.status(200).json(pedidos);
+    }
+  });
+});
+
+
+// Adicionando a criação da tabela Transacoes
+db.run(
+  `CREATE TABLE IF NOT EXISTS Transacoes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data TEXT NOT NULL,
+    tipo TEXT CHECK(tipo IN ('Entrada', 'Saída')) NOT NULL,
+    valor FLOAT NOT NULL,
+    produtoId INTEGER NOT NULL,
+    pedidoId INTEGER,
+    FOREIGN KEY (produtoId) REFERENCES Produtos(id),
+    FOREIGN KEY (pedidoId) REFERENCES Pedidos(id)
+  )`,
+  (err) => {
+    if (err) {
+      console.error('Erro ao criar a tabela Transacoes:', err.message);
+    } else {
+      console.log('Tabela Transacoes criada com sucesso.');
+    }
+  }
+);
+
+// Rota para listar todas as transações
+app.get('/transacoes', (req, res) => {
+  const { tipo, data } = req.query;
+  let query = `
+    SELECT Transacoes.*, Produtos.nome AS produtoNome, Pedidos.id AS pedidoId, Pedidos.status AS pedidoStatus
+    FROM Transacoes
+    LEFT JOIN Produtos ON Transacoes.produtoId = Produtos.id
+    LEFT JOIN Pedidos ON Transacoes.pedidoId = Pedidos.id
+    WHERE 1 = 1
+  `;
+  const queryParams = [];
+
+  if (tipo) {
+    query += ` AND Transacoes.tipo = ?`;
+    queryParams.push(tipo);
+  }
+
+  if (data) {
+    query += ` AND date(Transacoes.data) = date(?)`;
+    queryParams.push(data);
+  }
+
+  db.all(query, queryParams, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(200).json(rows);
+    }
+  });
+});
+
+// Rota para criar uma nova transação
+app.post('/transacoes', (req, res) => {
+  const { data, tipo, valor, produtoId, pedidoId } = req.body;
+
+  if (!data || !tipo || !valor || !produtoId) {
+    return res.status(400).send('Campos obrigatórios: data, tipo, valor, produtoId.');
+  }
+
+  // Verificar se o produto existe
+  db.get(`SELECT id FROM Produtos WHERE id = ?`, [produtoId], (err, produto) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (!produto) {
+      return res.status(400).json({ error: 'Produto não encontrado.' });
+    }
+
+    // Se `pedidoId` for fornecido, verificar se o pedido existe
+    if (pedidoId) {
+      db.get(`SELECT id FROM Pedidos WHERE id = ?`, [pedidoId], (err, pedido) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        if (!pedido) {
+          return res.status(400).json({ error: 'Pedido não encontrado.' });
+        }
+
+        // Inserir a transação após todas as verificações
+        inserirTransacao();
+      });
+    } else {
+      // Inserir a transação caso `pedidoId` não seja fornecido
+      inserirTransacao();
+    }
+  });
+
+  function inserirTransacao() {
+    db.run(
+      `INSERT INTO Transacoes (data, tipo, valor, produtoId, pedidoId)
+       VALUES (?, ?, ?, ?, ?)`,
+      [data, tipo, valor, produtoId, pedidoId || null],
+      function (err) {
+        if (err) {
+          res.status(500).json({ error: err.message });
+        } else {
+          res.status(201).json({ success: true, id: this.lastID });
+        }
+      }
+    );
+  }
+});
+
+// Rota para obter uma transação específica pelo ID
+app.get('/transacoes/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.get(
+    `
+    SELECT Transacoes.*, Produtos.nome AS produtoNome, Pedidos.id AS pedidoId, Pedidos.status AS pedidoStatus
+    FROM Transacoes
+    LEFT JOIN Produtos ON Transacoes.produtoId = Produtos.id
+    LEFT JOIN Pedidos ON Transacoes.pedidoId = Pedidos.id
+    WHERE Transacoes.id = ?
+    `,
+    [id],
+    (err, row) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else if (!row) {
+        res.status(404).json({ error: 'Transação não encontrada.' });
+      } else {
+        res.status(200).json(row);
+      }
+    }
+  );
+});
+
+// Rota para atualizar uma transação existente
+app.put('/transacoes/:id', (req, res) => {
+  const { id } = req.params;
+  const { data, tipo, valor, produtoId, pedidoId } = req.body;
+
+  if (!data || !tipo || !valor || !produtoId) {
+    return res.status(400).send('Campos obrigatórios: data, tipo, valor, produtoId.');
+  }
+
+  db.run(
+    `UPDATE Transacoes
+     SET data = ?, tipo = ?, valor = ?, produtoId = ?, pedidoId = ?
+     WHERE id = ?`,
+    [data, tipo, valor, produtoId, pedidoId || null, id],
+    function (err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+      } else if (this.changes === 0) {
+        res.status(404).json({ error: 'Transação não encontrada.' });
+      } else {
+        res.status(200).json({ success: true });
+      }
+    }
+  );
+});
+
+// Rota para excluir uma transação pelo ID
+app.delete('/transacoes/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.run(`DELETE FROM Transacoes WHERE id = ?`, [id], function (err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else if (this.changes === 0) {
+      res.status(404).json({ error: 'Transação não encontrada.' });
+    } else {
+      res.status(200).json({ success: true });
     }
   });
 });

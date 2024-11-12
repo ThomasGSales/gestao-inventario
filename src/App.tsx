@@ -4,13 +4,13 @@ import Home from './pages/Home';
 import Produtos from './pages/Produtos';
 import Fornecedores from './pages/Fornecedores';
 import Pedidos from './pages/Pedidos';
-import ItensPedidos from './pages/ItensPedidos';
 import Clientes from './pages/Clientes';
 import TransacoesFinanceiras from './pages/TransacoesFinanceiras';
 import FormData from './components/FormData';
 import FormFornecedor from './components/FormFornecedor';
 import FormPedidos from './components/FormPedidos';
 import FormClientes from './components/FormClientes';
+import FormTransacao from './components/FormTransacao';  // Importar o formulário de transações
 import Sobre from './pages/Sobre';
 import './App.css';
 import Login from './pages/Login';
@@ -22,10 +22,10 @@ import Relatorios from './pages/Relatorios';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, loading, logout } = useAuth(); // Agora pegamos o estado de loading
+  const { user, loading, logout } = useAuth();
 
   const handleLogout = () => {
-    logout(); // Chama o logout do contexto
+    logout();
   };
 
   return (
@@ -47,7 +47,6 @@ function App() {
                   <li><Link to="/produtos" onClick={() => setMenuOpen(false)}>Produtos</Link></li>
                   <li><Link to="/fornecedores" onClick={() => setMenuOpen(false)}>Fornecedores</Link></li>
                   <li><Link to="/pedidos" onClick={() => setMenuOpen(false)}>Pedidos</Link></li>
-                  {/* <li><Link to="/itenspedidos" onClick={() => setMenuOpen(false)}>Itens Pedidos</Link></li> */}
                   <li><Link to="/clientes" onClick={() => setMenuOpen(false)}>Clientes</Link></li>
                   <li><Link to="/transacoes" onClick={() => setMenuOpen(false)}>Transações Financeiras</Link></li>
                   <li><Link to="/relatorios" onClick={() => setMenuOpen(false)}>Relatórios</Link></li>
@@ -93,13 +92,17 @@ function App() {
         <Route path="/addpedido" element={<PrivateRoute user={user} loading={loading}><FormPedidos /></PrivateRoute>} />
         <Route path="/editpedido/:id" element={<PrivateRoute user={user} loading={loading}><FormPedidos /></PrivateRoute>} />
 
+        {/* Rotas para clientes */}
         <Route path="/clientes" element={<PrivateRoute user={user} loading={loading}><Clientes /></PrivateRoute>} />
         <Route path="/clientes/new" element={<PrivateRoute user={user} requiredRole="admin" loading={loading}><FormClientes /></PrivateRoute>} />
         <Route path="/clientes/edit/:id" element={<PrivateRoute user={user} requiredRole="admin" loading={loading}><FormClientes /></PrivateRoute>} />
 
-        {/* Outras rotas protegidas */}
-        <Route path="/itenspedidos" element={<PrivateRoute user={user} loading={loading}><ItensPedidos /></PrivateRoute>} />
+        {/* Rotas para transações financeiras */}
         <Route path="/transacoes" element={<PrivateRoute user={user} loading={loading}><TransacoesFinanceiras /></PrivateRoute>} />
+        <Route path="/transacoes/new" element={<PrivateRoute user={user} requiredRole="admin" loading={loading}><FormTransacao /></PrivateRoute>} />
+        <Route path="/transacoes/edit/:id" element={<PrivateRoute user={user} requiredRole="admin" loading={loading}><FormTransacao /></PrivateRoute>} />
+
+        {/* Outras rotas protegidas */}
         <Route path="/relatorios" element={<PrivateRoute user={user} loading={loading}><Relatorios /></PrivateRoute>} />
         <Route path="/modify/:ProductID" element={<PrivateRoute user={user} loading={loading}><FormData /></PrivateRoute>} />
         <Route path="/add" element={<PrivateRoute user={user} loading={loading}><FormData /></PrivateRoute>} />

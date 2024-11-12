@@ -20,8 +20,14 @@ interface Pedido {
   data: string;
 }
 
+interface Cliente {
+  id: number;
+  nome: string;
+}
+
 function ListPedidos() {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [clientes, setClientes] = useState<{ [key: number]: string }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +35,22 @@ function ListPedidos() {
   const [filtroStatus, setFiltroStatus] = useState<string>("");
   const [ordemTotal, setOrdemTotal] = useState<string>("");
 
-  const fetchPedidos = () => {
+  // Buscar todos os clientes e salvar no estado
+  const fetchClientes = async () => {
+    try {
+      const response = await api.get("/clientes");
+      const clientesData = response.data.reduce((acc: any, cliente: Cliente) => {
+        acc[cliente.id] = cliente.nome;
+        return acc;
+      }, {});
+      setClientes(clientesData);
+    } catch (err) {
+      console.error("Erro ao buscar clientes:", err);
+    }
+  };
+
+  const fetchPedidos = async () => {
+    setLoading(true);
     let query = `/pedidos?`;
 
     if (filtroCliente && !isNaN(Number(filtroCliente))) {
@@ -42,14 +63,19 @@ function ListPedidos() {
       query += `ordemTotal=${encodeURIComponent(ordemTotal)}&`;
     }
 
-    api.get(query)
-      .then((res) => setPedidos(res.data))
-      .catch((err) => setError(`Erro ao carregar pedidos: ${err.message}`))
-      .finally(() => setLoading(false));
+    try {
+      const response = await api.get(query);
+      setPedidos(response.data);
+    } catch (err:any) {
+      setError(`Erro ao carregar pedidos: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchPedidos();
+    fetchClientes(); // Carrega os clientes uma vez ao montar o componente
+    fetchPedidos(); // Carrega os pedidos
   }, [filtroCliente, filtroStatus, ordemTotal]);
 
   const handleDelete = (id: number) => {
@@ -103,7 +129,7 @@ function ListPedidos() {
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>Cliente ID</TableHead>
+                <TableHead>Cliente</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Data</TableHead>
@@ -114,7 +140,9 @@ function ListPedidos() {
               {pedidos.map((pedido) => (
                 <TableRow key={pedido.id}>
                   <TableCell>{pedido.id}</TableCell>
-                  <TableCell>{pedido.clienteId}</TableCell>
+                  <TableCell>
+                    {pedido.clienteId} - {clientes[pedido.clienteId] || "Cliente desconhecido"}
+                  </TableCell>
                   <TableCell>{pedido.status}</TableCell>
                   <TableCell>R$ {pedido.total.toFixed(2)}</TableCell>
                   <TableCell>{pedido.data}</TableCell>
