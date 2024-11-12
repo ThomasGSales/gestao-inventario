@@ -10,13 +10,12 @@ const Pedidos = () => {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4 ml-4">Gerenciamento de Pedidos</h1>
 
-      {/* Verifica se o usuário é admin para mostrar o botão */}
-      {user && user.role === 'admin' && (
-        <div className="ml-4">
+      {/* Renderizar o botão se o usuário estiver autenticado */}
+      {user && (
+        <div className="ml-4 mb-4">
           <Link to="/addpedido">
             <Button>Adicionar Pedido</Button>
           </Link>
-          
         </div>
       )}
 

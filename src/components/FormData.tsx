@@ -159,6 +159,7 @@ function FormData() {
             name="preco"
             onChange={handleChange}
             placeholder="Preço"
+            min={0}
             required
           />
         </div>
@@ -170,6 +171,7 @@ function FormData() {
             name="quantidade"
             onChange={handleChange}
             placeholder="Quantidade"
+            min={0}
             required
           />
         </div>

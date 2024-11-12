@@ -3,8 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import api from "@/utils/api"; // Instância do Axios configurada
 
-// Definição do tipo de fornecedor
 interface Fornecedor {
   FornecedorID?: number;
   Nome: string;
@@ -20,59 +20,74 @@ function FormFornecedor() {
     Contato: "",
     Endereco: "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const { FornecedorID } = useParams<{ FornecedorID: string }>();
 
   useEffect(() => {
     if (FornecedorID) {
-      fetch(`http://localhost:3000/fornecedores/${FornecedorID}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Erro ao buscar fornecedor.");
-          return res.json();
-        })
-        .then((foundFornecedor: Fornecedor) => {
-          setFornecedor(foundFornecedor);
-        })
-        .catch((err) => console.error(err));
+      api.get(`/fornecedores/${FornecedorID}`)
+        .then((res) => setFornecedor(res.data))
+        .catch((err) => console.error("Erro ao buscar fornecedor:", err));
     }
   }, [FornecedorID]);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-    const method = FornecedorID ? "PUT" : "POST";
-    const url = FornecedorID
-      ? `http://localhost:3000/fornecedores/${FornecedorID}`
-      : "http://localhost:3000/fornecedores";
-
-    fetch(url, {
-      method: method,
-      body: JSON.stringify(fornecedor),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`Erro ao salvar: ${res.statusText}`);
-        return res.json();
-      })
-      .then(() => navigate("/fornecedores"))
-      .catch((err) => console.error("Erro ao salvar fornecedor:", err));
+    try {
+      if (FornecedorID) {
+        await api.put(`/fornecedores/${FornecedorID}`, fornecedor);
+      } else {
+        await api.post("/fornecedores", fornecedor);
+      }
+      navigate("/fornecedores");
+    } catch (err: any) {
+      if (err.response && err.response.data.message === "CNPJ já cadastrado") {
+        setError("CNPJ já cadastrado. Por favor, utilize um valor diferente.");
+      } else {
+        setError("Erro ao salvar fornecedor. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFornecedor({
-      ...fornecedor,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    // Aplicar máscara para CNPJ e Contato
+    if (name === "CNPJ") {
+      setFornecedor({ ...fornecedor, CNPJ: maskCNPJ(value) });
+    } else if (name === "Contato") {
+      setFornecedor({ ...fornecedor, Contato: maskContato(value) });
+    } else {
+      setFornecedor({ ...fornecedor, [name]: value });
+    }
+  };
+
+  // Função para aplicar máscara de CNPJ
+  const maskCNPJ = (value: string) => {
+    return value
+      .replace(/\D/g, "")
+      .replace(/^(\d{2})(\d)/, "$1.$2")
+      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2")
+      .substring(0, 18);
+  };
+
+  // Função para aplicar máscara de telefone
+  const maskContato = (value: string) => {
+    return value
+      .replace(/\D/g, "")
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2")
+      .substring(0, 15);
   };
 
   return (
@@ -98,7 +113,7 @@ function FormFornecedor() {
             className="w-full"
             value={fornecedor.CNPJ}
             onChange={handleChange}
-            placeholder="CNPJ"
+            placeholder="XX.XXX.XXX/XXXX-XX"
             required
           />
         </div>
@@ -110,7 +125,7 @@ function FormFornecedor() {
             className="w-full"
             value={fornecedor.Contato}
             onChange={handleChange}
-            placeholder="Contato"
+            placeholder="(XX) XXXXX-XXXX"
             required
           />
         </div>
@@ -125,7 +140,10 @@ function FormFornecedor() {
             placeholder="Endereço"
           />
         </div>
-        <Button type="submit" className="w-full lg:w-1/2 mx-auto">{FornecedorID ? "Atualizar" : "Salvar"}</Button>
+        {error && <p className="text-red-500">{error}</p>}
+        <Button type="submit" className="w-full lg:w-1/2 mx-auto" disabled={loading}>
+          {loading ? "Salvando..." : FornecedorID ? "Atualizar" : "Salvar"}
+        </Button>
       </form>
     </div>
   );
